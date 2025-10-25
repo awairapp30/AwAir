@@ -1,34 +1,32 @@
-# AwAir AI Agent CLI Wrapper v5.3 - Ultra-Robust Manual Argument Parsing
+# AwAir AI Agent CLI Wrapper v5.4 - With Hardcoded Activation Protocol
 
-# --- SCRIPT LOGIC ---
-
-# --- MANUAL ARGUMENT PARSING ---
-$Agent = "gemini" # Default agent
-$PromptArray = @() # Initialize an empty array for the prompt parts
-
-if ($args.Count -gt 1 -and ($args[0] -eq '-Agent' -or $args[0] -eq '-agent')) {
-    # Case: The user has specified an agent, e.g., .\agent.ps1 -Agent qwen "prompt"
-    $Agent = $args[1]
-    if ($args.Count -gt 2) {
-        $PromptArray = $args[2..($args.Count - 1)]
-    }
-} else {
-    # Case: No agent was specified, all arguments are part of the prompt
-    $PromptArray = $args
-}
+param(
+    [string]$Agent = "gemini",
+    [Parameter(ValueFromRemainingArguments=$true)]
+    [string[]]$PromptArray
+)
 
 $userPrompt = $PromptArray -join " "
-
-# --- DIAGNOSTIC DEBUGGING ---
-# These lines will show us exactly what the script understood.
-Write-Host "--- SCRIPT DEBUG ---"
-Write-Host "Detected Agent: $Agent" -ForegroundColor Green
-Write-Host "Detected Prompt: $userPrompt" -ForegroundColor Green
-Write-Host "--------------------"
 
 if ([string]::IsNullOrWhiteSpace($userPrompt)) {
     Write-Host "Usage: .\agent.ps1 [-Agent gemini|qwen|iflow] '[Persona], [Your Request]'" -ForegroundColor Red
     return
+}
+
+# 1. HARDCODED ACTIVATION PROTOCOL CHECK
+if ($userPrompt -match "report project status") {
+    Write-Host "Session activation detected. Automatically running 'git status'..." -ForegroundColor Cyan
+    try {
+        $gitStatusOutput = Invoke-Expression "git status" 2>&1 | Out-String
+        # Modify the user's prompt to include the status output for the first turn
+        $userPrompt = "Here is the output from the mandatory initial 'git status' command:`n<command_output>`n$gitStatusOutput`n</command_output>`nNow, please provide the full project status report and suggest the next steps."
+        Write-Host "--- GIT STATUS CAPTURED ---"
+        Write-Host $gitStatusOutput
+        Write-Host "--------------------------"
+    } catch {
+        $errorMessage = $_.Exception.Message
+        $userPrompt = "The initial 'git status' command failed with an error: `n<command_output>`n$errorMessage`n</command_output>`n. Acknowledge the error and advise."
+    }
 }
 
 # 2. Load the master nexus file.
@@ -45,8 +43,7 @@ $personaProfileContent = Get-Content -Path "./awair_nexus/ai_profiles/$($persona
 
 # 5. Construct the full system prompt.
 $systemPrompt = @"
-You are an expert AI assistant for the 'AwAir' project. Your absolute master is 'Executor R'.
-You MUST act as the '$persona' persona. You MUST follow all protocols defined in the Master Nexus, especially the Autonomous Action Protocol.
+You are an expert AI assistant for the 'AwAir' project. Your absolute master is 'Executor R'. You MUST act as the '$persona' persona and follow all protocols defined in the Master Nexus.
 
 --- MASTER NEXUS FILE ---
 $masterNexusContent
@@ -55,36 +52,23 @@ $masterNexusContent
 $personaProfileContent
 "@
 
-# 6. --- EXECUTION LOOP ---
+# 6. --- EXECUTION LOOP (Simplified) ---
+# Since we now handle the initial command, the loop is simpler for activation.
 $currentPrompt = $userPrompt
-while ($true) {
-    Write-Host "Preparing prompt for LOCAL AI ($Agent), embodying '$persona'..." -ForegroundColor Yellow
 
-    $fullPrompt = @"
+Write-Host "Preparing prompt for LOCAL AI ($Agent), embodying '$persona'..." -ForegroundColor Yellow
+
+$fullPrompt = @"
 $systemPrompt
 
 --- CURRENT CONVERSATION ---
 $currentPrompt
 "@
 
-    $aiResponse = $fullPrompt | & $Agent
-    Write-Host "--- AI ($persona) ---"
-    Write-Host $aiResponse
+$aiResponse = $fullPrompt | & $Agent
+Write-Host "--- AI ($persona) ---"
+Write-Host $aiResponse
 
-    if ($aiResponse -match "<execute_command>(.*?)</execute_command>") {
-        $commandToRun = $matches[1].Trim()
-        Write-Host "AI has requested to run a command: '$commandToRun'" -ForegroundColor Cyan
-        try {
-            $commandOutput = Invoke-Expression $commandToRun 2>&1 | Out-String
-            Write-Host "--- COMMAND OUTPUT ---"
-            Write-Host $commandOutput
-            $currentPrompt = "Here is the output from the command '$commandToRun':`n<command_output>`n$commandOutput`n</command_output>`nNow, please analyze this output and provide your final report or next steps."
-        } catch {
-            $errorMessage = $_.Exception.Message
-            Write-Host "ERROR running command '$commandToRun': $errorMessage" -ForegroundColor Red
-            $currentPrompt = "The command '$commandToRun' failed with an error: `n<command_output>`n$errorMessage`n</command_output>`n. Acknowledge the error and advise."
-        }
-    } else {
-        break 
-    }
-}
+# NOTE: The full command execution loop is disabled for this simplified activation.
+# If the AI asks for another command, you will run it manually for now.
+# We will upgrade this back to a full loop after confirming this fix works.
