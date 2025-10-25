@@ -1,34 +1,39 @@
-# AwAir AI Agent CLI Wrapper v5.1 - Corrected to use Piping for Input
+# AwAir AI Agent CLI Wrapper v5.2 - With Robust Argument Parsing and Command Execution
 
 # --- PARAMETERS ---
+# This block correctly parses the command-line arguments.
 param(
-    [string]$Agent = "gemini" # Default agent is gemini
+    # Optional named parameter for the agent, e.g., -Agent qwen
+    [string]$Agent = "gemini",
+
+    # This special parameter catches all other arguments and puts them into an array
+    [Parameter(ValueFromRemainingArguments=$true)]
+    [string[]]$PromptArray
 )
 
 # --- SCRIPT LOGIC ---
 
-# 1. Get the user's full prompt
-$userPrompt = $args | Where-Object { $_ -ne "-Agent" -and $_ -ne $Agent } | ForEach-Object { "$_" }
-$userPrompt = $userPrompt -join " "
+# 1. Join the array of arguments into a single string for the prompt.
+$userPrompt = $PromptArray -join " "
 
 if ([string]::IsNullOrWhiteSpace($userPrompt)) {
     Write-Host "Usage: .\agent.ps1 [-Agent gemini|qwen|iflow] '[Persona], [Your Request]'"
     return
 }
 
-# 2. Load the master nexus file
+# 2. Load the master nexus file for context and protocols.
 $masterNexusContent = Get-Content -Path "./awair_nexus/awair-master-ai-knowledge-nexus.md" -Raw
 
-# 3. Identify which persona is being requested
-$persona = "Guardian"
+# 3. Identify which persona is being requested.
+$persona = "Guardian" # Default persona
 $personaFile = "The Smart Guardian for a Peaceful Development Workflow.md"
 if ($userPrompt -match "Maestro") { $persona = "Maestro"; $personaFile = "Maestro.md" }
 if ($userPrompt -match "QA Co-Pilot") { $persona = "QA Co-Pilot"; $personaFile = "Co-Pilot with an Integrated QA Lab.md" }
 
-# 4. Load the specific persona profile
+# 4. Load the specific persona profile.
 $personaProfileContent = Get-Content -Path "./awair_nexus/ai_profiles/$($personaFile)" -Raw
 
-# 5. Construct the final system prompt
+# 5. Construct the final system prompt.
 $systemPrompt = @"
 You are an expert AI assistant for the 'AwAir' project. Your absolute master is 'Executor R'.
 You MUST act as the '$persona' persona. You MUST follow all protocols defined in the Master Nexus, especially the Autonomous Action Protocol for command execution.
@@ -53,8 +58,7 @@ $systemPrompt
 $currentPrompt
 "@
 
-    # --- THIS IS THE CORRECTED LINE ---
-    # Instead of passing the prompt as an argument, we PIPE it to the command's standard input.
+    # Pipe the full prompt into the selected local AI command
     $aiResponse = $fullPrompt | & $Agent
 
     Write-Host "--- AI ($persona) ---"
@@ -71,7 +75,7 @@ $currentPrompt
             Write-Host "--- COMMAND OUTPUT ---"
             Write-Host $commandOutput
             
-            # Prepare the output to be sent back to the AI
+            # Prepare the output to be sent back to the AI for the next loop iteration
             $currentPrompt = "Here is the output from the command '$commandToRun':`n<command_output>`n$commandOutput`n</command_output>`nNow, please analyze this output and provide your final report or next steps."
 
         } catch {
@@ -80,7 +84,7 @@ $currentPrompt
             $currentPrompt = "The command '$commandToRun' failed with the following error: `n<command_output>`n$errorMessage`n</command_output>`n. Please acknowledge the error and advise on the next step."
         }
     } else {
-        # The AI's response was just text, no command. Break the loop.
+        # The AI's response was just text, no command. Break the loop and wait for the user's next command.
         break 
     }
 }
