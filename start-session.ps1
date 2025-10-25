@@ -63,7 +63,7 @@ Respond to: "$currentPrompt"
     Add-Content -Path $logFileName -Value "`n--- USER/SYSTEM: $($currentPrompt) ---"
     Write-Host "($($Persona) is thinking...)" -ForegroundColor Gray
     
-    $aiResponse = $fullPrompt | & $Agent
+    $aiResponse = $fullPrompt | & "$($Agent).ps1"
     
     Add-Content -Path $logFileName -Value "`n--- AI ($Persona): $($aiResponse) ---"
     Write-Host "`n--- $($Persona) ---" -ForegroundColor Cyan
