@@ -1,4 +1,4 @@
-# AwAir AI Agent CLI Wrapper v5.6 - Definitive Version
+# AwAir AI Agent CLI Wrapper
 
 # --- 1. ROBUST MANUAL ARGUMENT PARSING ---
 $Agent = "gemini" # Default agent
