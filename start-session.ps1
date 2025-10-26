@@ -326,12 +326,32 @@ Write-Host "  'exit'   - End session" -ForegroundColor Gray
 Write-Host "`nPaste the context into $Agent window now, then return here." -ForegroundColor White
 Write-Host "="*70 -ForegroundColor Cyan
 
-# Wait for user confirmation
-$null = Read-Host "`nPress Enter after pasting context into $Agent"
+# Wait for user confirmation with clear instructions
+Write-Host "`n" + "!"*70 -ForegroundColor Yellow
+Write-Host "   CRITICAL: YOU MUST PASTE THE CONTEXT NOW!" -ForegroundColor Yellow
+Write-Host "!"*70 -ForegroundColor Yellow
+Write-Host "`nIn the $Agent window that just opened:" -ForegroundColor Cyan
+Write-Host "  1. Click inside the $Agent window" -ForegroundColor White
+Write-Host "  2. Press Ctrl+V to paste the complete context" -ForegroundColor White
+Write-Host "  3. Press Enter to send it" -ForegroundColor White
+Write-Host "  4. Wait for AI to acknowledge (should mention loaded files)" -ForegroundColor White
+Write-Host "`nThe context is already in your clipboard - just press Ctrl+V!" -ForegroundColor Green
+Write-Host "!"*70 -ForegroundColor Yellow
+
+$null = Read-Host "`nPress Enter ONLY AFTER you've pasted and AI acknowledged"
 
 Write-Host "`n✓ Starting conversation loop..." -ForegroundColor Green
 Write-Host "You can now interact with both this console and the $Agent window." -ForegroundColor Gray
 Write-Host ""
+
+# Verify AI received context
+Write-Host "⚠ VERIFICATION CHECK:" -ForegroundColor Yellow
+$verified = Read-Host "Did the AI acknowledge the loaded files? (y/n)"
+if ($verified.ToLower() -ne "y") {
+    Write-Host "`n⚠ WARNING: AI may not have proper context!" -ForegroundColor Red
+    Write-Host "Type 'paste' anytime to copy context again and re-paste it." -ForegroundColor Yellow
+    Write-Host ""
+}
 
 $turnCount = 0
 
