@@ -1,6 +1,0 @@
-.\start-session.ps1 -Agent gemini -Persona Guardian "Ready to build HomeScreen"
-
-.\start-session.ps1 -Agent gemini -Persona Maestro
-
-
-cd C:\Users\tiram\Documents\AwAir
