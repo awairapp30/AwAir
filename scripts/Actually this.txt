@@ -1,0 +1,38 @@
+1. Launch the Correct AI and Persona:
+
+    It contains the logic to accept both an -Agent flag (gemini, qwen, or iflow) and a -Persona flag (Guardian, Maestro, QA-Co-Pilot).
+
+    This allows you to choose exactly which AI tool to launch and which personality profile it should load.
+
+2. Provide Perfect Memory of All Documentation (The Map):
+
+    It contains the PowerShell code to automatically scan your entire awair_nexus/docs/ folder.
+
+    It builds a "Directory Map" of all 21 blueprints and guides.
+
+    It injects this complete map into the AI's context so the AI knows the exact location of every project file without ever needing to search, thus curing its "amnesia."
+
+3. Provide Real-Time Awareness of Other Conversations:
+
+    It contains the logic to scan your conversations/ folder.
+
+    It finds the most recently updated log files from any other active AI sessions.
+
+    It injects this "Real-Time Awareness Report" into the AI's brain so it knows what your other agents are doing right now, enabling collaboration and intervention.
+
+4. Understand the App's Current Code State:
+
+    While it doesn't read your app files directly, it provides the foundation for the Session Activation Protocol.
+
+    The AI it launches is explicitly commanded to immediately ask you for the git status, which is how it determines the "actual state" of your code (clean, modified, etc.).
+
+5. Maintain a Live, Interactive Session:
+
+    Most importantly, it contains the while ($true) chat loop.
+
+    This is the core logic that keeps the session "logged in." It repeatedly takes your input, packages it with all the context, sends it to the AI, displays the response, and then waits for your next input, creating a continuous, turn-by-turn conversation.
+
+And these ( your recommendation )
+
+Loads: Vision, Database, State Architecture, Tech Stack
+Use for: Regular coding, building features
